@@ -22,7 +22,7 @@ export const SidebarCreateButtons: FC<SidebarCreateButtonsProps> = ({
   contentType,
   hasData
 }) => {
-  const { profile, selectedWorkspace, folders, setFolders } =
+  const { profile, selectedWorkspace, folders, setFolders, isDemoMode } =
     useContext(ChatbotUIContext)
   const { handleNewChat } = useChatHandler()
 
@@ -57,36 +57,43 @@ export const SidebarCreateButtons: FC<SidebarCreateButtonsProps> = ({
 
       case "presets":
         return async () => {
+          if (isDemoMode) return null
           setIsCreatingPreset(true)
         }
 
       case "prompts":
         return async () => {
+          if (isDemoMode) return null
           setIsCreatingPrompt(true)
         }
 
       case "files":
         return async () => {
+          if (isDemoMode) return null
           setIsCreatingFile(true)
         }
 
       case "collections":
         return async () => {
+          if (isDemoMode) return null
           setIsCreatingCollection(true)
         }
 
       case "assistants":
         return async () => {
+          if (isDemoMode) return null
           setIsCreatingAssistant(true)
         }
 
       case "tools":
         return async () => {
+          if (isDemoMode) return null
           setIsCreatingTool(true)
         }
 
       case "models":
         return async () => {
+          if (isDemoMode) return null
           setIsCreatingModel(true)
         }
 

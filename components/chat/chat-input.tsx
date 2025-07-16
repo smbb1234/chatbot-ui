@@ -6,7 +6,8 @@ import {
   IconBolt,
   IconCirclePlus,
   IconPlayerStopFilled,
-  IconSend
+  IconSend,
+  IconRobotFace
 } from "@tabler/icons-react"
 import Image from "next/image"
 import { FC, useContext, useEffect, useRef, useState } from "react"
@@ -20,6 +21,7 @@ import { useChatHandler } from "./chat-hooks/use-chat-handler"
 import { useChatHistoryHandler } from "./chat-hooks/use-chat-history"
 import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
 import { useSelectFileHandler } from "./chat-hooks/use-select-file-handler"
+import { sendAgentMessage } from "@/lib/agent-api"
 
 interface ChatInputProps {}
 
@@ -54,7 +56,15 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
     chatSettings,
     selectedTools,
     setSelectedTools,
-    assistantImages
+    assistantImages,
+    isAgentMode,
+    agentConfig,
+    agentTools,
+    setUserInput,
+    setChatMessages,
+    setIsGenerating,
+    profile,
+    selectedChat
   } = useContext(ChatbotUIContext)
 
   const {
@@ -81,11 +91,90 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
     }, 200) // FIX: hacky
   }, [selectedPreset, selectedAssistant])
 
+  const handleSendClick = async () => {
+    if (!userInput.trim()) return
+
+    // If agent mode is enabled, send the message to the agent API
+    if (isAgentMode && agentConfig) {
+      await handleAgentMessage()
+    } else {
+      // Regular chat message handling
+      await handleSendMessage(userInput, chatMessages, false)
+    }
+  }
+
+  // Handle sending message to agent API
+  const handleAgentMessage = async () => {
+    if (!agentConfig || !userInput.trim()) return
+
+    const messageContent = userInput.trim()
+    setUserInput("")
+    setIsGenerating(true)
+
+    try {
+      // Add user message to chat
+      const userMessage = {
+        message: {
+          id: Date.now().toString(),
+          content: messageContent,
+          role: "user" as const,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          chat_id: selectedChat?.id || "",
+          user_id: profile?.user_id || "",
+          sequence_number: chatMessages.length,
+          image_paths: []
+        },
+        fileItems: []
+      }
+
+      setChatMessages(prevMessages => [...prevMessages, userMessage])
+
+      // Call the agent API to send the message
+      const agentResponse = await sendAgentMessage({
+        config: agentConfig,
+        message: messageContent,
+        files: []
+      })
+
+      // Add agent response to chat
+      const assistantMessage = {
+        message: {
+          id: (Date.now() + 1).toString(),
+          content: agentResponse.content,
+          role: "assistant" as const,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          chat_id: selectedChat?.id || "",
+          user_id: profile?.user_id || "",
+          sequence_number: chatMessages.length + 1,
+          image_paths: []
+        },
+        fileItems: []
+      }
+
+      setChatMessages(prevMessages => [...prevMessages, assistantMessage])
+
+      // Handle tool calls if any
+      if (agentResponse.tool_calls && agentResponse.tool_calls.length > 0) {
+        console.log("Agent used tools:", agentResponse.tool_calls)
+      }
+    } catch (error) {
+      console.error("Agent message failed:", error)
+      toast.error(
+        "Failed to send message to Agent. Please check your connection."
+      )
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (!isTyping && event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
       setIsPromptPickerOpen(false)
-      handleSendMessage(userInput, chatMessages, false)
+      // handleSendMessage(userInput, chatMessages, false)
+      handleSendClick()
     }
 
     // Consolidate conditions to avoid TypeScript error
@@ -209,6 +298,21 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
             </div>
           </div>
         )}
+
+        {/* Agent Mode */}
+        {isAgentMode && agentConfig && (
+          <div className="mx-auto flex w-fit items-center space-x-2 rounded-lg border border-blue-500 bg-blue-50 p-1.5 dark:bg-blue-950">
+            <IconRobotFace size={20} className="text-blue-600" />
+            <div className="text-sm font-bold text-blue-700 dark:text-blue-300">
+              Agent Mode Active
+            </div>
+            {agentTools.length > 0 && (
+              <div className="text-xs text-blue-600 dark:text-blue-400">
+                ({agentTools.filter(t => t.enabled).length} tools)
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="border-input relative mt-3 flex min-h-[60px] w-full items-center justify-center rounded-xl border-2">
@@ -264,12 +368,15 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
             <IconSend
               className={cn(
                 "bg-primary text-secondary rounded p-1",
-                !userInput && "cursor-not-allowed opacity-50"
+                // !userInput && "cursor-not-allowed opacity-50"
+                (!userInput || (isAgentMode && !agentConfig)) &&
+                  "cursor-not-allowed opacity-50"
               )}
               onClick={() => {
-                if (!userInput) return
-
-                handleSendMessage(userInput, chatMessages, false)
+                // if (!userInput) return
+                // handleSendMessage(userInput, chatMessages, false)
+                if (!userInput || (isAgentMode && !agentConfig)) return
+                handleSendClick()
               }}
               size={30}
             />

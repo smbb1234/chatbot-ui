@@ -11,6 +11,7 @@ import {
 import { AssistantImage } from "@/types/images/assistant-image"
 import { VALID_ENV_KEYS } from "@/types/valid-keys"
 import { Dispatch, SetStateAction, createContext } from "react"
+import { AgentConfig, AgentTool } from "@/types/agent"
 
 interface ChatbotUIContext {
   // PROFILE STORE
@@ -136,6 +137,20 @@ interface ChatbotUIContext {
   setSelectedTools: Dispatch<SetStateAction<Tables<"tools">[]>>
   toolInUse: string
   setToolInUse: Dispatch<SetStateAction<string>>
+
+  // AGENT STORE
+  agentConfig: AgentConfig | null
+  setAgentConfig: Dispatch<SetStateAction<AgentConfig | null>>
+  agentTools: AgentTool[]
+  setAgentTools: Dispatch<SetStateAction<AgentTool[]>>
+  isAgentMode: boolean
+  setIsAgentMode: Dispatch<SetStateAction<boolean>>
+  isAgentConnected: boolean
+  setIsAgentConnected: Dispatch<SetStateAction<boolean>>
+
+  // DEMO MODE STORE
+  isDemoMode: boolean
+  setIsDemoMode: Dispatch<SetStateAction<boolean>>
 }
 
 export const ChatbotUIContext = createContext<ChatbotUIContext>({
@@ -261,5 +276,19 @@ export const ChatbotUIContext = createContext<ChatbotUIContext>({
   selectedTools: [],
   setSelectedTools: () => {},
   toolInUse: "none",
-  setToolInUse: () => {}
+  setToolInUse: () => {},
+
+  // AGENT STORE
+  agentConfig: null,
+  setAgentConfig: () => {},
+  agentTools: [],
+  setAgentTools: () => {},
+  isAgentMode: false,
+  setIsAgentMode: () => {},
+  isAgentConnected: false,
+  setIsAgentConnected: () => {},
+
+  // DEMO MODE STORE
+  isDemoMode: false,
+  setIsDemoMode: () => {}
 })

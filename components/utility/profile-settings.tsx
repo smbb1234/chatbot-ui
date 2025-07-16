@@ -19,7 +19,9 @@ import {
   IconFileDownload,
   IconLoader2,
   IconLogout,
-  IconUser
+  IconUser,
+  IconToggleLeft,
+  IconToggleRight
 } from "@tabler/icons-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -60,6 +62,8 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   const [isOpen, setIsOpen] = useState(false)
+
+  const { isDemoMode, setIsDemoMode } = useContext(ChatbotUIContext)
 
   const [displayName, setDisplayName] = useState(profile?.display_name || "")
   const [username, setUsername] = useState(profile?.username || "")
@@ -734,7 +738,8 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
             <WithTooltip
               display={
                 <div>
-                  Download Chatbot UI 1.0 data as JSON. Import coming soon!
+                  Download Diagonal Matrix AI Agents 1.0 data as JSON. Import
+                  coming soon!
                 </div>
               }
               trigger={
@@ -743,6 +748,31 @@ export const ProfileSettings: FC<ProfileSettingsProps> = ({}) => {
                   size={32}
                   onClick={exportLocalStorageAsJSON}
                 />
+              }
+            />
+
+            <WithTooltip
+              display={
+                <div>
+                  {isDemoMode
+                    ? "Exit demo mode to access all features"
+                    : "Enable demo mode for simplified interface"}
+                </div>
+              }
+              trigger={
+                !isDemoMode ? (
+                  <IconToggleLeft
+                    className="cursor-pointer transition-colors hover:opacity-50"
+                    size={32}
+                    onClick={() => setIsDemoMode(true)}
+                  />
+                ) : (
+                  <IconToggleRight
+                    className="cursor-pointer text-blue-500 transition-colors hover:opacity-50"
+                    size={32}
+                    onClick={() => setIsDemoMode(false)}
+                  />
+                )
               }
             />
           </div>

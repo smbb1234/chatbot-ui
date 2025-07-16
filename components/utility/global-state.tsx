@@ -27,6 +27,7 @@ import { AssistantImage } from "@/types/images/assistant-image"
 import { VALID_ENV_KEYS } from "@/types/valid-keys"
 import { useRouter } from "next/navigation"
 import { FC, useEffect, useState } from "react"
+import { AgentConfig, AgentTool } from "@/types/agent"
 
 interface GlobalStateProps {
   children: React.ReactNode
@@ -122,6 +123,15 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
   // TOOL STORE
   const [selectedTools, setSelectedTools] = useState<Tables<"tools">[]>([])
   const [toolInUse, setToolInUse] = useState<string>("none")
+
+  // AGENT STORE
+  const [agentConfig, setAgentConfig] = useState<AgentConfig | null>(null)
+  const [agentTools, setAgentTools] = useState<AgentTool[]>([])
+  const [isAgentMode, setIsAgentMode] = useState(false)
+  const [isAgentConnected, setIsAgentConnected] = useState(false)
+
+  // DEMO MODE STORE
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(true)
 
   useEffect(() => {
     ;(async () => {
@@ -322,7 +332,21 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
         selectedTools,
         setSelectedTools,
         toolInUse,
-        setToolInUse
+        setToolInUse,
+
+        // AGENT STORE
+        agentConfig,
+        setAgentConfig,
+        agentTools,
+        setAgentTools,
+        isAgentMode,
+        setIsAgentMode,
+        isAgentConnected,
+        setIsAgentConnected,
+
+        // DEMO MODE STORE
+        isDemoMode,
+        setIsDemoMode
       }}
     >
       {children}
