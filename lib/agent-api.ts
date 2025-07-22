@@ -2,7 +2,8 @@ import {
   AgentConfig,
   AgentTool,
   AgentResponse,
-  AgentMessage
+  AgentMessage,
+  TaskAnalysisResponse
 } from "@/types/agent"
 
 interface ConnectionConfig {
@@ -65,6 +66,41 @@ export const getAgentTools = async (
   }
 }
 
+export const analyzeTask = async (
+  config: ConnectionConfig,
+  message: string
+): Promise<TaskAnalysisResponse> => {
+  try {
+    // console.log(`${config.endpoint}/analysis`)
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
+    }
+
+    if (config.apiKey) {
+      headers["Authorization"] = `Bearer ${config.apiKey}`
+    }
+
+    const response = await fetch(`${config.endpoint}/analysis`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        message: message,
+        tools: config.tools
+      }),
+      signal: AbortSignal.timeout(config.timeout)
+    })
+
+    if (!response.ok) {
+      throw new Error(`Analysis API error: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error("Task analysis failed:", error)
+    throw error
+  }
+}
+
 export const sendAgentMessage = async (
   message: AgentMessage
 ): Promise<AgentResponse> => {
@@ -82,7 +118,8 @@ export const sendAgentMessage = async (
       headers,
       body: JSON.stringify({
         message: message.message,
-        tools: message.config.tools
+        tools: message.config.tools,
+        stream: message.stream || false
         // files: message.files // If you need to upload files
       }),
       signal: AbortSignal.timeout(message.config.timeout)

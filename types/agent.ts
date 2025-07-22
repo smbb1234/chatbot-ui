@@ -12,6 +12,11 @@ export interface AgentTool {
   description: string
 }
 
+export interface TaskAnalysisResponse {
+  breakdown: string
+  estimated_time?: string
+}
+
 export interface AgentResponse {
   content: string
   tool_calls?: any[]

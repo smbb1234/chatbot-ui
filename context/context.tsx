@@ -11,7 +11,7 @@ import {
 import { AssistantImage } from "@/types/images/assistant-image"
 import { VALID_ENV_KEYS } from "@/types/valid-keys"
 import { Dispatch, SetStateAction, createContext } from "react"
-import { AgentConfig, AgentTool } from "@/types/agent"
+import { AgentConfig, AgentTool, TaskAnalysisResponse } from "@/types/agent"
 
 interface ChatbotUIContext {
   // PROFILE STORE
@@ -147,6 +147,16 @@ interface ChatbotUIContext {
   setIsAgentMode: Dispatch<SetStateAction<boolean>>
   isAgentConnected: boolean
   setIsAgentConnected: Dispatch<SetStateAction<boolean>>
+
+  // TASK ANALYSIS STORE
+  taskAnalysis: TaskAnalysisResponse | null
+  setTaskAnalysis: Dispatch<SetStateAction<TaskAnalysisResponse | null>>
+  isAnalyzing: boolean
+  setIsAnalyzing: Dispatch<SetStateAction<boolean>>
+  pendingUserMessage: string
+  setPendingUserMessage: Dispatch<SetStateAction<string>>
+  showTaskConfirmation: boolean
+  setShowTaskConfirmation: Dispatch<SetStateAction<boolean>>
 
   // DEMO MODE STORE
   isDemoMode: boolean
@@ -287,6 +297,16 @@ export const ChatbotUIContext = createContext<ChatbotUIContext>({
   setIsAgentMode: () => {},
   isAgentConnected: false,
   setIsAgentConnected: () => {},
+
+  // TASK ANALYSIS STORE
+  taskAnalysis: null,
+  setTaskAnalysis: () => {},
+  isAnalyzing: false,
+  setIsAnalyzing: () => {},
+  pendingUserMessage: "",
+  setPendingUserMessage: () => {},
+  showTaskConfirmation: false,
+  setShowTaskConfirmation: () => {},
 
   // DEMO MODE STORE
   isDemoMode: false,

@@ -21,7 +21,8 @@ import { useChatHandler } from "./chat-hooks/use-chat-handler"
 import { useChatHistoryHandler } from "./chat-hooks/use-chat-history"
 import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
 import { useSelectFileHandler } from "./chat-hooks/use-select-file-handler"
-import { sendAgentMessage } from "@/lib/agent-api"
+import { sendAgentMessage, analyzeTask } from "@/lib/agent-api"
+import { TaskConfirmation } from "../agents/task-confirmation"
 
 interface ChatInputProps {}
 
@@ -64,7 +65,15 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
     setChatMessages,
     setIsGenerating,
     profile,
-    selectedChat
+    selectedChat,
+    taskAnalysis,
+    setTaskAnalysis,
+    isAnalyzing,
+    setIsAnalyzing,
+    pendingUserMessage,
+    setPendingUserMessage,
+    showTaskConfirmation,
+    setShowTaskConfirmation
   } = useContext(ChatbotUIContext)
 
   const {
@@ -103,69 +112,28 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
     }
   }
 
-  // Handle sending message to agent API
+  // Handle analyzing task and showing confirmation dialog
   const handleAgentMessage = async () => {
     if (!agentConfig || !userInput.trim()) return
 
     const messageContent = userInput.trim()
     setUserInput("")
-    setIsGenerating(true)
+    setIsAnalyzing(true)
 
     try {
-      // Add user message to chat
-      const userMessage = {
-        message: {
-          id: Date.now().toString(),
-          content: messageContent,
-          role: "user" as const,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          chat_id: selectedChat?.id || "",
-          user_id: profile?.user_id || "",
-          sequence_number: chatMessages.length,
-          image_paths: []
-        },
-        fileItems: []
-      }
+      // Analyze task
+      const analysis = await analyzeTask(agentConfig, messageContent)
 
-      setChatMessages(prevMessages => [...prevMessages, userMessage])
-
-      // Call the agent API to send the message
-      const agentResponse = await sendAgentMessage({
-        config: agentConfig,
-        message: messageContent,
-        files: []
-      })
-
-      // Add agent response to chat
-      const assistantMessage = {
-        message: {
-          id: (Date.now() + 1).toString(),
-          content: agentResponse.content,
-          role: "assistant" as const,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          chat_id: selectedChat?.id || "",
-          user_id: profile?.user_id || "",
-          sequence_number: chatMessages.length + 1,
-          image_paths: []
-        },
-        fileItems: []
-      }
-
-      setChatMessages(prevMessages => [...prevMessages, assistantMessage])
-
-      // Handle tool calls if any
-      if (agentResponse.tool_calls && agentResponse.tool_calls.length > 0) {
-        console.log("Agent used tools:", agentResponse.tool_calls)
-      }
+      // Set task analysis and pending user message
+      setTaskAnalysis(analysis)
+      setPendingUserMessage(messageContent)
+      setShowTaskConfirmation(true)
     } catch (error) {
-      console.error("Agent message failed:", error)
-      toast.error(
-        "Failed to send message to Agent. Please check your connection."
-      )
+      console.error("Task analysis failed:", error)
+      toast.error("Failed to analyze task. Please check your connection.")
+      setUserInput(messageContent)
     } finally {
-      setIsGenerating(false)
+      setIsAnalyzing(false)
     }
   }
 
@@ -251,8 +219,28 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
     }
   }
 
+  // Modify the input to prevent sending immediately
+  const isSendDisabled = () => {
+    if (!userInput.trim()) return true
+    if (isAgentMode && !agentConfig) return true
+    if (isGenerating || isAnalyzing) return true
+    return false
+  }
+
+  // Modify the placeholder text
+  const getPlaceholderText = () => {
+    if (isAnalyzing) return "Analyzing..."
+    if (isGenerating) return "Executing..."
+    if (isAgentMode)
+      return "Enter the task description and AI will break down the execution steps for you"
+    return t(`Ask anything. Type @  /  #  !`)
+  }
+
   return (
     <>
+      {/* Task Confirmation Modal */}
+      <TaskConfirmation />
+
       <div className="flex flex-col flex-wrap justify-center gap-2">
         <ChatFilesDisplay />
 
@@ -271,7 +259,6 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
             >
               <div className="flex cursor-pointer items-center justify-center space-x-1 rounded-lg bg-purple-600 px-3 py-1 hover:opacity-50">
                 <IconBolt size={20} />
-
                 <div>{tool.name}</div>
               </div>
             </div>
@@ -299,12 +286,12 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
           </div>
         )}
 
-        {/* Agent Mode */}
+        {/* Agent Mode Status Display */}
         {isAgentMode && agentConfig && (
           <div className="mx-auto flex w-fit items-center space-x-2 rounded-lg border border-blue-500 bg-blue-50 p-1.5 dark:bg-blue-950">
             <IconRobotFace size={20} className="text-blue-600" />
             <div className="text-sm font-bold text-blue-700 dark:text-blue-300">
-              Agent Mode Active
+              {isAnalyzing ? "Analyzing..." : "Agent Mode Active"}
             </div>
             {agentTools.length > 0 && (
               <div className="text-xs text-blue-600 dark:text-blue-400">
@@ -343,10 +330,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
         <TextareaAutosize
           textareaRef={chatInputRef}
           className="ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring text-md flex w-full resize-none rounded-md border-none bg-transparent px-14 py-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          placeholder={t(
-            // `Ask anything. Type "@" for assistants, "/" for prompts, "#" for files, and "!" for tools.`
-            `Ask anything. Type @  /  #  !`
-          )}
+          placeholder={getPlaceholderText()}
           onValueChange={handleInputChange}
           value={userInput}
           minRows={1}
@@ -355,6 +339,7 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
           onPaste={handlePaste}
           onCompositionStart={() => setIsTyping(true)}
           onCompositionEnd={() => setIsTyping(false)}
+          disabled={isAnalyzing || isGenerating}
         />
 
         <div className="absolute bottom-[14px] right-3 cursor-pointer hover:opacity-50">
@@ -364,18 +349,18 @@ export const ChatInput: FC<ChatInputProps> = ({}) => {
               onClick={handleStopMessage}
               size={30}
             />
+          ) : isAnalyzing ? (
+            <div className="flex items-center justify-center rounded bg-blue-500 p-1 text-white">
+              <div className="size-4 animate-spin rounded-full border-b-2 border-white"></div>
+            </div>
           ) : (
             <IconSend
               className={cn(
                 "bg-primary text-secondary rounded p-1",
-                // !userInput && "cursor-not-allowed opacity-50"
-                (!userInput || (isAgentMode && !agentConfig)) &&
-                  "cursor-not-allowed opacity-50"
+                isSendDisabled() && "cursor-not-allowed opacity-50"
               )}
               onClick={() => {
-                // if (!userInput) return
-                // handleSendMessage(userInput, chatMessages, false)
-                if (!userInput || (isAgentMode && !agentConfig)) return
+                if (isSendDisabled()) return
                 handleSendClick()
               }}
               size={30}

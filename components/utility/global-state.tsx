@@ -27,7 +27,7 @@ import { AssistantImage } from "@/types/images/assistant-image"
 import { VALID_ENV_KEYS } from "@/types/valid-keys"
 import { useRouter } from "next/navigation"
 import { FC, useEffect, useState } from "react"
-import { AgentConfig, AgentTool } from "@/types/agent"
+import { AgentConfig, AgentTool, TaskAnalysisResponse } from "@/types/agent"
 
 interface GlobalStateProps {
   children: React.ReactNode
@@ -129,6 +129,15 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
   const [agentTools, setAgentTools] = useState<AgentTool[]>([])
   const [isAgentMode, setIsAgentMode] = useState(false)
   const [isAgentConnected, setIsAgentConnected] = useState(false)
+
+  // TASK ANALYSIS STORE
+  const [taskAnalysis, setTaskAnalysis] = useState<TaskAnalysisResponse | null>(
+    null
+  )
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false)
+  const [pendingUserMessage, setPendingUserMessage] = useState<string>("")
+  const [showTaskConfirmation, setShowTaskConfirmation] =
+    useState<boolean>(false)
 
   // DEMO MODE STORE
   const [isDemoMode, setIsDemoMode] = useState<boolean>(true)
@@ -343,6 +352,16 @@ export const GlobalState: FC<GlobalStateProps> = ({ children }) => {
         setIsAgentMode,
         isAgentConnected,
         setIsAgentConnected,
+
+        // TASK ANALYSIS STORE
+        taskAnalysis,
+        setTaskAnalysis,
+        isAnalyzing,
+        setIsAnalyzing,
+        pendingUserMessage,
+        setPendingUserMessage,
+        showTaskConfirmation,
+        setShowTaskConfirmation,
 
         // DEMO MODE STORE
         isDemoMode,
