@@ -72,7 +72,7 @@ export const AgentSettingsDialog: FC<AgentSettingsDialogProps> = ({
           name: "Default Agent",
           endpoint,
           apiKey: apiKey || undefined,
-          timeout: 60000,
+          timeout: 150000,
           tools: availableTools.filter(t => t.enabled).map(t => t.name)
         }
 
