@@ -157,12 +157,28 @@
   z-index: 1;
 }
 
-.messages-glass {
-  background: rgba(var(--background), 0.75) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border-radius: 12px 12px 0 0;
+.message-container {
+  background: transparent !important;
+  backdrop-filter: none;
+}
+
+.user-message {
+  background: rgba(var(--primary), 0.05) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.assistant-message {
+  background: rgba(var(--secondary), 0.1) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.message-content {
+  background: rgba(var(--card), 0.6) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-bottom: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
