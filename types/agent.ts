@@ -25,6 +25,7 @@ export interface AgentResponse {
 
 export interface AgentMessage {
   config: AgentConfig
-  message: string
+  messages: string[]
   files?: File[]
+  stream?: boolean
 }

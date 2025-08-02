@@ -9,6 +9,8 @@ import {
 interface ConnectionConfig {
   endpoint: string
   apiKey?: string
+  tools?: string[]
+  timeout: number
 }
 
 export const testAgentConnection = async (
@@ -117,7 +119,7 @@ export const sendAgentMessage = async (
       method: "POST",
       headers,
       body: JSON.stringify({
-        message: message.message,
+        messages: message.messages,
         tools: message.config.tools,
         stream: message.stream || false
         // files: message.files // If you need to upload files

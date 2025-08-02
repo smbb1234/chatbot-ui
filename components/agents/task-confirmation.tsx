@@ -61,7 +61,7 @@ export const TaskConfirmation: FC<TaskConfirmationProps> = () => {
       // Send task execution request
       const agentResponse = await sendAgentMessage({
         config: agentConfig,
-        message: taskAnalysis.breakdown,
+        messages: [taskAnalysis.breakdown, pendingUserMessage],
         files: []
       })
 
