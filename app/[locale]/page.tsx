@@ -9,7 +9,7 @@ export default function HomePage() {
   const { theme } = useTheme()
 
   return (
-    <div className="login-container flex size-full flex-col items-center justify-center">
+    <div className="page-container flex size-full flex-col items-center justify-center">
       <div>
         <ChatbotUISVG theme={theme === "dark" ? "dark" : "light"} scale={0.3} />
       </div>
