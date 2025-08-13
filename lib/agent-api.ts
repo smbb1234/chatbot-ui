@@ -73,7 +73,6 @@ export const analyzeTask = async (
   message: string
 ): Promise<TaskAnalysisResponse> => {
   try {
-    // console.log(`${config.endpoint}/analysis`)
     const headers: Record<string, string> = {
       "Content-Type": "application/json"
     }

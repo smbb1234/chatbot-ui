@@ -61,7 +61,7 @@ export const TaskConfirmation: FC<TaskConfirmationProps> = () => {
       // Send task execution request
       const agentResponse = await sendAgentMessage({
         config: agentConfig,
-        messages: [taskAnalysis.breakdown, pendingUserMessage],
+        messages: [taskAnalysis.breakdown_raw, pendingUserMessage],
         files: []
       })
 
@@ -135,7 +135,7 @@ export const TaskConfirmation: FC<TaskConfirmationProps> = () => {
           <div>
             <h4 className="mb-2 text-sm font-medium">Task Breakdown:</h4>
             <div className="whitespace-pre-wrap rounded-lg bg-blue-50 p-3 text-sm dark:bg-blue-950">
-              {taskAnalysis.breakdown}
+              {taskAnalysis.breakdown_human_friendly}
             </div>
           </div>
         </CardContent>
