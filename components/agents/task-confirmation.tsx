@@ -55,21 +55,13 @@ export const TaskConfirmation: FC<TaskConfirmationProps> = () => {
         },
         fileItems: []
       }
-
       setChatMessages(prevMessages => [...prevMessages, userMessage])
 
-      // Send task execution request
-      const agentResponse = await sendAgentMessage({
-        config: agentConfig,
-        messages: [taskAnalysis.breakdown_raw, pendingUserMessage],
-        files: []
-      })
-
-      // Add assistant response
+      // Add empty response for streaming assistant agentResponse.content
       const assistantMessage = {
         message: {
           id: (Date.now() + 1).toString(),
-          content: agentResponse.content,
+          content: "",
           role: "assistant" as const,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -80,8 +72,30 @@ export const TaskConfirmation: FC<TaskConfirmationProps> = () => {
         },
         fileItems: []
       }
-
       setChatMessages(prevMessages => [...prevMessages, assistantMessage])
+
+      // Send task execution request
+      const agentResponse = await sendAgentMessage({
+        config: agentConfig,
+        messages: [taskAnalysis.breakdown_raw, pendingUserMessage],
+        files: []
+      })
+
+      // Update assistant message content (if streaming is supported, it can be updated in blocks here)
+      setChatMessages(prevMessages => {
+        // Find the last assistant message and update its content
+        return prevMessages.map((msg, idx) =>
+          idx === prevMessages.length - 1
+            ? {
+                ...msg,
+                message: {
+                  ...msg.message,
+                  content: agentResponse.content
+                }
+              }
+            : msg
+        )
+      })
 
       // Handle tool calls
       if (agentResponse.tool_calls && agentResponse.tool_calls.length > 0) {
